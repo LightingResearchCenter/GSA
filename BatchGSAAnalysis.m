@@ -1,4 +1,4 @@
-function BatchCaseWesternAnalysis
+function BatchGSAAnalysis
 %CASEWESTERNANALYSIS Desciption goes here
 %   Detailed description goes here
 
@@ -29,7 +29,7 @@ end
 
 %% File handling
 caseWesternHome = fullfile([filesep,filesep],'root','projects',...
-    'GSA_Daysimeter','Colorado Daysimeter data');
+    'NIH Alzheimers','CaseWesternData');
 % Read in data from excel spreadsheet of dimesimeter/actiwatch info
 indexPath = fullfile(caseWesternHome,'index.xlsx');
 [subject,week,days,daysimStart,daysimSN,daysimPath,actiStart,~,...
