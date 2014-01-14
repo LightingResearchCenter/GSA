@@ -124,7 +124,7 @@ for i1 = 1:lengthSub
 
         % Attempt to perform sleep analysis
         try
-            subLog = checkSleepLog(sleepLog,subject(i1),aTime,AI,sleepLogMode,fixedBedTime,fixedWakeTime);
+            subLog = checkSleepLog(sleepLog,subject(i1),dTime,AI,sleepLogMode,fixedBedTime,fixedWakeTime);
         catch err
             reportError(header,err.message,errorPath);
         end
@@ -135,10 +135,10 @@ for i1 = 1:lengthSub
                 sleepData.SleepEfficiency{i1},sleepData.Latency{i1},...
                 sleepData.SleepBouts{i1},sleepData.WakeBouts{i1},...
                 sleepData.MeanSleepBout{i1},sleepData.MeanWakeBout{i1}] = ...
-                AnalyzeFile(aTime,PIM,subLog.bedtime,subLog.getuptime,true);
+                AnalyzeFile(dTime,AI,subLog.bedtime,subLog.getuptime,true);
 
-            dt = etime(datevec(aTime(2)),datevec(aTime(1)));
-            [sleepData.actiIS{i1},sleepData.actiIV{i1}] = IS_IVcalc(PIM,dt);
+            dt = etime(datevec(dTime(2)),datevec(dTime(1)));
+            [sleepData.actiIS{i1},sleepData.actiIV{i1}] = IS_IVcalc(AI,dt);
             
             if sleepLogMode == 2
                 sleepData.userBedLogs{i1} = sum(subLog.bedlog);
@@ -154,18 +154,13 @@ for i1 = 1:lengthSub
     else
         % Attempt to import the data
         try
-            [aTime,PIM,dTime,CS,AI] = ...
+            [dTime,CS,AI] = ...
                 importData(actiPath{i1,1},daysimPath{i1,1},daysimSN(i1));
         catch err
             reportError(header,err.message,errorPath);
             continue;
         end
     end
-    
-    % Resample and normalize Actiwatch data to Daysimeter data
-    [dTime,CS,AI,aTime,PIM] = ...
-        combineData(aTime,PIM,dTime,CS,AI,...
-        startTime(i1),stopTime(i1),rmStart(i1),rmStop(i1));
     
     % Attempt to perform phasor analysis on the combined data
     try
@@ -180,7 +175,7 @@ for i1 = 1:lengthSub
     
     % Attempt to perform sleep analysis
     try
-        subLog = checkSleepLog(sleepLog,subject(i1),aTime,AI,sleepLogMode,fixedBedTime,fixedWakeTime);
+        subLog = checkSleepLog(sleepLog,subject(i1),dTime,AI,sleepLogMode,fixedBedTime,fixedWakeTime);
     catch err
         reportError(header,err.message,errorPath);
     end
@@ -191,10 +186,10 @@ for i1 = 1:lengthSub
             sleepData.SleepEfficiency{i1},sleepData.Latency{i1},...
             sleepData.SleepBouts{i1},sleepData.WakeBouts{i1},...
             sleepData.MeanSleepBout{i1},sleepData.MeanWakeBout{i1}] = ...
-            AnalyzeFile(aTime,PIM,subLog.bedtime,subLog.getuptime,true,errorPath);
+            AnalyzeFile(dTime,AI,subLog.bedtime,subLog.getuptime,true,errorPath);
         
-        dt = etime(datevec(aTime(2)),datevec(aTime(1)));
-        [sleepData.actiIS{i1},sleepData.actiIV{i1}] = IS_IVcalc(PIM,dt);
+        dt = etime(datevec(dTime(2)),datevec(dTime(1)));
+        [sleepData.actiIS{i1},sleepData.actiIV{i1}] = IS_IVcalc(AI,dt);
         if sleepLogMode == 2
             sleepData.userBedLogs{i1} = sum(subLog.bedlog);
             sleepData.calcBedLogs{i1} = numel(subLog.bedlog) - sleepData.userBedLogs{i1};
