@@ -32,8 +32,7 @@ caseWesternHome = fullfile([filesep,filesep],'root','projects',...
     'NIH Alzheimers','CaseWesternData');
 % Read in data from excel spreadsheet of dimesimeter/actiwatch info
 indexPath = fullfile(caseWesternHome,'index.xlsx');
-[subject,week,days,daysimStart,daysimSN,daysimPath,actiStart,~,...
-    actiPath,rmStart,rmStop] = importIndex(indexPath);
+[subject, days, daysimStart, daysimEnd, daysimPath] = importIndex(indexPath);
 % Import sleepLog
 sleepLogPath = fullfile(caseWesternHome,'sleepLog.xlsx');
 sleepLog = importSleepLog(sleepLogPath);
@@ -66,7 +65,6 @@ phasorData.season = cell(lengthSub,1);
 % Preallocate sleep struct
 sleepData = dataset;
 sleepData.subject = subject;
-sleepData.week = week;
 sleepData.season = cell(lengthSub,1);
 sleepData.ActualSleep = cell(lengthSub,1);
 sleepData.ActualSleepPercent = cell(lengthSub,1);
@@ -88,10 +86,9 @@ sleepData.calcUpLogs = cell(lengthSub,1);
 %% Perform vectorized calculations
 
 % Set start and stop times for analysis
-actiStart(isnan(actiStart)) = 0;
 daysimStart(isnan(daysimStart)) = 0;
-startTime = max([actiStart,daysimStart],[],2);
-stopTime = startTime + days;
+startTime = daysimStart;
+stopTime = daysimEnd;
 
 % Determine the season
 monthStr = datestr(startTime,'mm');
@@ -116,16 +113,7 @@ for i1 = 1:lengthSub
         phasorData.season{i1} = 'summer';
         sleepData.season{i1} = 'summer';
     end
-    
-    % Check if Actiwatch file path is listed and exists
-    if isempty(actiPath{i1,1}) || (exist(actiPath{i1,1},'file') ~= 2)
-        if exist(actiPath{i1,1},'file') ~= 2
-            reportError(header,...
-                ['Actiwatch file does not exist. File: ',actiPath{i1,1}],...
-                errorPath);
-        end
-        continue;
-    end
+
     % Check if Daysimeter file path is listed and exists
     if isempty(daysimPath{i1,1}) || (exist(daysimPath{i1,1},'file') ~= 2)
         if exist(daysimPath{i1,1},'file') ~= 2
@@ -133,22 +121,7 @@ for i1 = 1:lengthSub
                 ['Daysimeter file does not exist. File: ',daysimPath{i1,1}],...
                 errorPath);
         end
-        % Import just the Actiwatch data
-        % Create CDF file name
-        CDFactiPath = regexprep(actiPath{i1,1},'\.csv','.cdf');
-        % Check if CDF versions exist
-        if exist(CDFactiPath,'file') == 2 % CDF Actiwatch file exists
-            actiData = ProcessCDF(CDFactiPath);
-            aTime = actiData.Variables.Time;
-            PIM = actiData.Variables.Activity;
-        else % CDF Actiwatch file does not exist
-            % Reads the data from the actiwatch data file
-            [aTime,PIM] = importActiwatch(actiPath{i1,1});
-            % Create a CDF version
-            WriteActiwatchCDF(CDFactiPath,aTime,PIM);
-        end
-        clear('actiData');
-        [aTime,PIM] = cropData(aTime,PIM,startTime(i1),stopTime(i1),rmStart(i1),rmStop(i1));
+
         % Attempt to perform sleep analysis
         try
             subLog = checkSleepLog(sleepLog,subject(i1),aTime,AI,sleepLogMode,fixedBedTime,fixedWakeTime);

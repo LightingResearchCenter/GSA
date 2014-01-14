@@ -1,4 +1,4 @@
-function [subject, daysimStart, daysimEnd, daysimPath, days] = importIndex(workbookFile,sheetName,startRow,endRow)
+function [subject, days, daysimStart, daysimEnd, daysimPath] = importIndex(workbookFile,sheetName,startRow,endRow)
 %IMPORTINDEX Import data from a spreadsheet
 %   [subject,week,days,dimeStart,dimeSN,dimePath,actiStart,actiSN,actiPath,rmStart,rmStop]
 %   = IMPORTFILE(FILE) reads data from the first worksheet in the Microsoft
