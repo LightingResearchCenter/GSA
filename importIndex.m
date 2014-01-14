@@ -1,4 +1,4 @@
-function [subject,week,days,dimeStart,dimeSN,dimePath,actiStart,actiSN,actiPath,rmStart,rmStop] = importIndex(workbookFile,sheetName,startRow,endRow)
+function [subject, daysimStart, daysimEnd, daysimPath, days] = importIndex(workbookFile,sheetName,startRow,endRow)
 %IMPORTINDEX Import data from a spreadsheet
 %   [subject,week,days,dimeStart,dimeSN,dimePath,actiStart,actiSN,actiPath,rmStart,rmStop]
 %   = IMPORTFILE(FILE) reads data from the first worksheet in the Microsoft
@@ -51,8 +51,8 @@ for block=2:length(startRow)
 end
 raw(cellfun(@(x) ~isempty(x) && isnumeric(x) && isnan(x),raw)) = {''};
 cellVectors = raw(:,[6,9]);
-raw = raw(:,[1,2,3,4,5,7,8,10,11]);
-dateNums = dateNums(:,[1,2,3,4,5,7,8,10,11]);
+raw = raw(:,[1,2,3]);
+dateNums = dateNums(:,[1,2,3]);
 
 %% Replace date strings by MATLAB serial date numbers (datenum)
 R = ~cellfun(@isequalwithequalnans,dateNums,raw) & cellfun('isclass',raw,'char'); % Find spreadsheet dates
@@ -67,26 +67,16 @@ data = reshape([raw{:}],size(raw));
 
 %% Allocate imported array to column variable names
 subject = data(:,1);
-week = data(:,2);
-days = data(:,3);
-dimeStart = data(:,4);
-dimeSN = data(:,5);
-dimePath = cellVectors(:,1);
-actiStart = data(:,6);
-actiSN = data(:,7);
-actiPath = cellVectors(:,2);
-rmStart = data(:,8);
-rmStop = data(:,9);
+daysimStart = data(:,2);
+daysimEnd = data(:,3);
+daysimPath = data(:,4)
 
 %% Complete file paths replace ...\
 [pathstr, ~, ~] = fileparts(workbookFile);
-dimePath = fullfile(pathstr,dimePath);
-actiPath = fullfile(pathstr,actiPath);
+daysimPath = fullfile(pathstr, daysimPath);
 
 %% Default empty days values to 7
-%Find all the entries with an empty numDays value
-emptyNumDays =  isnan(days);
 %Set the default value for the numDays to 7
-days(emptyNumDays) = 7;
+days = daysimEnd - daysimStart;
 
 end
