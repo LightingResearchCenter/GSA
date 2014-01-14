@@ -1,4 +1,4 @@
-function [PIM,dTime,CS,AI] = importData(daysimPath,daysimSN)
+function [dTime,CS,AI] = importData(daysimPath,daysimSN)
 %IMPORTDATA Import data from Actiwatch and Daysimeter files
 %   Detailed description goes here
 

@@ -29,7 +29,7 @@ end
 
 %% File handling
 caseWesternHome = fullfile([filesep,filesep],'root','projects',...
-    'NIH Alzheimers','CaseWesternData');
+    'GSA_Daysimeter','Colorado Daysimeter data');
 % Read in data from excel spreadsheet of dimesimeter/actiwatch info
 indexPath = fullfile(caseWesternHome,'index.xlsx');
 [subject, days, daysimStart, daysimEnd, daysimPath] = importIndex(indexPath);
@@ -88,7 +88,6 @@ sleepData.calcUpLogs = cell(lengthSub,1);
 % Set start and stop times for analysis
 daysimStart(isnan(daysimStart)) = 0;
 startTime = daysimStart;
-stopTime = daysimEnd;
 
 % Determine the season
 monthStr = datestr(startTime,'mm');
@@ -155,7 +154,7 @@ for i1 = 1:lengthSub
         % Attempt to import the data
         try
             [dTime,CS,AI] = ...
-                importData(actiPath{i1,1},daysimPath{i1,1},daysimSN(i1));
+                importData(daysimPath{i1,1},daysimSN(i1));
         catch err
             reportError(header,err.message,errorPath);
             continue;
