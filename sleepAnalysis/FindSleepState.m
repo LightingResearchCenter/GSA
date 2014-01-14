@@ -1,20 +1,19 @@
-function SleepState = FindSleepState(Activity,Threshold)
+function sleepState = FindSleepState(activity, threshold, f)
 %SLEEPSTATE Calculate sleep state using LRC simple method
 
-% Make Activity array vertical if not already
-Activity = Activity(:);
-
-% Calculate Sleep State 1 = sleeping 0 = not sleeping
-n = numel(Activity); %Find the number of data points
-SleepState = zeros(1,n); % Preallocate SleepState
-for i = 1:n
-    if Activity(i) <= Threshold
-        SleepState(i) = 1;
+% Set Threshold value
+if strcmpi(threshold,'auto')
+    if min(activity) > 0
+        threshold = min(activity)*f;
     else
-        SleepState(i) = 0;
+        threshold = .03*f;
     end
-end % End of calculate sleep state
-
-
 end
 
+% Make Activity array vertical
+activity = activity(:);
+
+% Calculate Sleep State 1 = sleeping 0 = not sleeping
+sleepState = activity <= threshold;
+
+end

@@ -7,7 +7,7 @@ catch
 end
 
 % Find the bed state
-bedState = FindSleepState(AI,.5);
+bedState = FindSleepState(AI,.5, 0);
 
 % Find bed state in a 10 minute window
 Epoch = etime(datevec(Time(2)),datevec(Time(1))); % Find epoch length in seconds
