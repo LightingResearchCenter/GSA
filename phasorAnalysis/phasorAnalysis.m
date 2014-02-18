@@ -2,13 +2,15 @@ function [phasorMagnitude, phasorAngle, IS, IV, mCS, MagH, f24abs] = phasorAnaly
 %PHASORANALYSIS Performs analysis on CS and activity
 
 %% Process and analyze data
-Srate = 1/(round(((time(2)-time(1))*(24*3600))*1000)/1000); % sample rate in Hertz
+epoch = round((time(2)-time(1))*(24*3600)*1000)/1000; % sample epoch in seconds
+Srate = 1/epoch; % sample rate in Hertz
 % Calculate inter daily stability and variablity
 [IS,IV] = IS_IVcalc(activity,1/Srate);
 
 % Apply gaussian filter to data
-CS = gaussian(CS, 4);
-activity = gaussian(activity, 4);
+win = floor(300/epoch); % number of samples in 5 minutes
+CS = gaussian(CS, win);
+activity = gaussian(activity, win);
 
 % Calculate phasors
 [phasorMagnitude, phasorAngle] = cos24(CS, activity, time);
