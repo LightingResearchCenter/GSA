@@ -70,7 +70,7 @@ for i1 = 1:nCDF
     %% Perform analysis
     % Run phasor analysis
     [output.phasorMagnitude{i1},output.phasorAngle{i1},...
-        output.IS{i1},output.IV{i1},~,...
+        output.IS{i1},output.IV{i1},...
         output.magnitudeWithHarmonics{i1},...
         output.magnitudeFirstHarmonic{i1}] =...
         phasorAnalysis(time,CS,activity);
@@ -84,7 +84,16 @@ end
 %% Save output
 outputPath = fullfile(resultsFolder,['phasor_',datestr(now,'yyyy-mm-dd_HH-MM')]);
 save([outputPath,'.mat'],'output');
-dataCell = dataset2cell(struct2dataset(output));
-xlswrite([outputPath,'.xlsx'],dataCell);
+
+% Make varNames pretty
+uglyVarNames = fieldnames(output);
+varNames = regexprep(uglyVarNames,'([^A-Z])([A-Z])','$1\r\n$2');
+outputCell = dataset2cell(struct2dataset(output));
+for i2 = 1:numel(varNames)
+    outputCell{1,i2} = varNames{i2};
+end
+xlswrite([outputPath,'.xlsx'],outputCell);
+
+close gcf
 end
 
