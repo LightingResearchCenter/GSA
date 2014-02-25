@@ -10,15 +10,17 @@ addpath(CDFtoolkit,'phasorAnalysis');
 projectFolder = fullfile([filesep,filesep],'root','projects',...
     'GSA_Daysimeter','Colorado Daysimeter data');
 cropLogPath = fullfile(projectFolder,'cropLog.xlsx');
-cdfFolder = fullfile(projectFolder,'cdfData');
-resultsFolder = fullfile(projectFolder,'results');
+cdfDir = fullfile(projectFolder,'cdfData');
+resultsDir = fullfile(projectFolder,'results');
+plotsDir = fullfile(projectFolder,'phasorPlots');
 
 % Import the crop log
 cropLog = struct;
-[cropLog.subject,cropLog.startTime,cropLog.stopTime] = importCropLog(cropLogPath);
+[cropLog.subject,cropLog.startTime,cropLog.stopTime,...
+    cropLog.startRm1,cropLog.stopRm1] = importCropLog(cropLogPath);
 
 % Get a listing of all CDF files in the folder
-cdfList = dir([cdfFolder,filesep,'*.cdf']);
+cdfList = dir([cdfDir,filesep,'*.cdf']);
 
 %% Specify local data
 lat = 39.068585;
@@ -40,7 +42,7 @@ output.daytimeLux = cell(nCDF,1);
 %% Begin main loop
 for i1 = 1:nCDF
     %% Load CDF
-    data = ProcessCDF(fullfile(cdfFolder,cdfList(i1).name));
+    data = ProcessCDF(fullfile(cdfDir,cdfList(i1).name));
     subject = str2double(data.GlobalAttributes.subjectID{1});
     time = data.Variables.time - 2/24; % Adjust from Eastern to Mountain time
     CS = data.Variables.CS;
@@ -55,7 +57,12 @@ for i1 = 1:nCDF
     end
     startTime = cropLog.startTime(cLog);
     stopTime = cropLog.stopTime(cLog);
+    startRm1 = cropLog.startRm1(cLog);
+    stopRm1 = cropLog.stopRm1(cLog);
     crop = ~((time >= startTime) & (time <= stopTime));
+    if ~isnan(startRm1)
+        crop = crop | ((time >= startRm1) & (time <= stopRm1));
+    end
     % Crop the data
     time(crop) = [];
     activity(crop) = [];
@@ -79,10 +86,20 @@ for i1 = 1:nCDF
     [output.daytimeCS{i1},output.daytimeLux{i1}] =...
         daytimeLight(time,CS,Lux,lat,lon,GMToff);
     
+    %% Plot Data
+    Title = ['GSA Subject ',num2str(subject)];
+    PhasorReport(time,activity,CS,...
+        output.phasorMagnitude{i1},output.phasorAngle{i1},...
+        output.IS{i1},output.IV{i1},...
+        output.magnitudeWithHarmonics{i1},...
+        output.magnitudeFirstHarmonic{i1},Title);
+    plotFile = fullfile(plotsDir,['subject',num2str(subject),'.pdf']);
+    saveas(gcf,plotFile);
+    close all;
 end
 
 %% Save output
-outputPath = fullfile(resultsFolder,['phasor_',datestr(now,'yyyy-mm-dd_HH-MM')]);
+outputPath = fullfile(resultsDir,['phasor_',datestr(now,'yyyy-mm-dd_HH-MM')]);
 save([outputPath,'.mat'],'output');
 
 % Make varNames pretty

@@ -2,7 +2,7 @@ function [phasorMagnitude, phasorAngle, IS, IV, MagH, f24abs] = phasorAnalysis(t
 %PHASORANALYSIS Performs analysis on CS and activity
 
 %% Process and analyze data
-epoch = round(mean(diff(time)*24*60*60)); % sample epoch in seconds
+epoch = round(mode(diff(time)*24*60*60)); % sample epoch in seconds
 Srate = 1/epoch; % sample rate in Hertz
 
 % Apply gaussian filter to data
@@ -14,14 +14,13 @@ activity = gaussian(activity, win);
 [IS,IV] = IS_IVcalc(activity,epoch);
 
 % Calculate phasors
-[phasorMagnitude, phasorAngle] = cos24(CS, activity, time);
-[f24H,f24] = phasor24Harmonics(CS,activity,Srate); % f24H returns all the harmonics of the 24-hour rhythm (as complex numbers)
-MagH = sqrt(sum((abs(f24H).^2))); % the magnitude including all the harmonics
+[phasorMagnitude,phasorAngle] = cos24(CS, activity, time);
+
+% f24H returns all the harmonics of the 24-hour rhythm (as complex numbers)
+[f24H,f24] = phasor24Harmonics(CS,activity,Srate);
+% the magnitude including all the harmonics
+MagH = sqrt(sum((abs(f24H).^2)));
 
 f24abs = abs(f24);
-
-plot(time,[activity,CS]);
-datetick2;
-pause
 
 end
