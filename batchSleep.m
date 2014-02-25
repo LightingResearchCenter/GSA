@@ -14,7 +14,6 @@ sleepLogPath = fullfile(projectFolder,'sleepLog.xlsx');
 cropLogPath = fullfile(projectFolder,'cropLog.xlsx');
 cdfFolder = fullfile(projectFolder,'cdfData');
 resultsFolder = fullfile(projectFolder,'results');
-plotFolder = fullfile(projectFolder,'plots');
 
 % Import the sleep log
 sleepLog = struct;
@@ -29,20 +28,7 @@ cdfList = dir([cdfFolder,filesep,'*.cdf']);
 
 %% Preallocate output
 nCDF = numel(cdfList);
-output = struct;
-output.line = [];
-output.subject = [];
-output.Date = {};
-output.ActualSleep = {};
-output.ActualSleepPercent = {};
-output.ActualWake = {};
-output.ActualWakePercent = {};
-output.SleepEfficiency = {};
-output.Latency = {};
-output.SleepBouts = {};
-output.WakeBouts = {};
-output.MeanSleepBout = {};
-output.MeanWakeBout = {};
+output = cell(nCDF,1);
 
 %% Begin main loop
 for i1 = 1:nCDF
@@ -81,30 +67,10 @@ for i1 = 1:nCDF
     
     %% Perform analysis
     % Run sleep analysis
-    [tempLine,tempSubject,tempDate,tempActualSleep,tempActualSleepPercent,...
-        tempActualWake,tempActualWakePercent,...
-        tempSleepEfficiency,tempLatency,...
-        tempSleepBouts,tempWakeBouts,...
-        tempMeanSleepBout,tempMeanWakeBout] = ...
-        AnalyzeFile(subject,time,activity,bedTime,getupTime,plotFolder);
+    output{i1} = ...
+        AnalyzeFile(subject,time,activity,bedTime,getupTime);
     
-    %% Combine variables
-    output.line = [output.line;tempLine];
-    output.subject = [output.subject;tempSubject];
-    output.Date = [output.Date;tempDate];
-    output.ActualSleep = [output.ActualSleep;tempActualSleep];
-    output.ActualSleepPercent = [output.ActualSleepPercent;tempActualSleepPercent];
-    output.ActualWake = [output.ActualWake;tempActualWake];
-    output.ActualWakePercent = [output.ActualWakePercent;tempActualWakePercent];
-    output.SleepEfficiency = [output.SleepEfficiency;tempSleepEfficiency];
-    output.Latency = [output.Latency;tempLatency];
-    output.SleepBouts = [output.SleepBouts;tempSleepBouts];
-    output.WakeBouts = [output.WakeBouts;tempWakeBouts];
-    output.MeanSleepBout = [output.MeanSleepBout;tempMeanSleepBout];
-    output.MeanWakeBout = [output.MeanWakeBout;tempMeanWakeBout];
 end
-
-close all;
 
 %% Save output
 outputPath = fullfile(resultsFolder,['sleep_',datestr(now,'yyyy-mm-dd_HH-MM')]);
