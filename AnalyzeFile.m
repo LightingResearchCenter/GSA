@@ -20,7 +20,7 @@ nNights = numel(bedTime);
 %% Preallocate sleep parameters
 output = cell(nNights,1);
 
-dateFormat = 'dd-mmm-yy';
+dateFormat = 'mm/dd/yyyy';
 
 %% Call function to calculate sleep parameters for each day
 for i1 = 1:nNights
@@ -28,11 +28,11 @@ for i1 = 1:nNights
         output{i1} = sleepAnalysis(Time,Activity,...
                 analysisStartTime(i1),analysisEndTime(i1),...
                 bedTime(i1),wakeTime(i1),'auto');
+        tempFields = fieldnames(output{i1})';
     catch err
         display(err.message);
+        tempFields = {};
     end
-    
-    tempFields = fieldnames(output{i1})';
     
     output{i1}.line = subject + i1/10;
     output{i1}.subject = subject;
