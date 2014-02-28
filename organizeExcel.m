@@ -8,7 +8,7 @@ flatOut = cat(1,output{:});
 % Determine variable names
 varNames = fieldnames(flatOut{1})';
 % Make variable names pretty
-prettyNames = lower(regexprep(varNames,'([^A-Z])([A-Z])','$1 $2'));
+prettyNames = lower(regexprep(varNames,'([^A-Z])([A-Z0-9])','$1 $2'));
 
 % Convert nested cell array of structs to 2D cell matrix
 tempCell = cellfun(@struct2cell,flatOut,'UniformOutput',false);
