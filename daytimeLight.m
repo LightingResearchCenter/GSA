@@ -1,4 +1,4 @@
-function [daytimeCS,daytimeLux] = daytimeLight(timeD,CS,Lux,lat,lon,GMToff)
+function [dayIdx,daytimeCS,daytimeLux] = daytimeLight(timeD,CS,Lux,lat,lon,GMToff)
 %DAYTIMECS Calculates mean CS during daylight that is nonzero
 %   Inputs:
 %       timeD	= time in datenum format
