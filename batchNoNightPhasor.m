@@ -9,7 +9,7 @@ addpath(CDFtoolkit,'phasorAnalysis');
 %% File handling
 projectFolder = fullfile([filesep,filesep],'root','projects',...
     'GSA_Daysimeter','Colorado Daysimeter data');
-cropLogPath = fullfile(projectFolder,'cropLog.xlsx');
+cropLogPath = fullfile(projectFolder,'phasorCropLog.xlsx');
 cdfDir = fullfile(projectFolder,'cdfData');
 resultsDir = fullfile(projectFolder,'results');
 plotsDir = fullfile(projectFolder,'phasorPlots');
@@ -81,7 +81,7 @@ for i1 = 1:nCDF
     
     % Remove nighttime data
     CS(~dayIdx) = 0;
-    activity(~dayIdx) = min(activity);
+    activity(~dayIdx) = 0;
     
     % Run phasor analysis
     [output.phasorMagnitude{i1},output.phasorAngle{i1},...
@@ -92,7 +92,7 @@ for i1 = 1:nCDF
     
     %% Plot Data
     Title = ['GSA Subject ',num2str(subject)];
-    PhasorReport(time,activity,CS,...
+    PhasorReportNoDates(time,activity,CS,...
         output.phasorMagnitude{i1},output.phasorAngle{i1},...
         output.IS{i1},output.IV{i1},...
         output.magnitudeWithHarmonics{i1},...

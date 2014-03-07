@@ -1,5 +1,10 @@
-function PhasorReport(time,activity,CS,phasorMagnitude,phasorAngle,IS,IV,MagH,f24abs,Title)
+function PhasorReportNoDates(time,activity,CS,phasorMagnitude,phasorAngle,IS,IV,MagH,f24abs,Title)
 %PHASORREPORT Generates graphical summary of CS and Activity
+
+%% Replace time with time index removing gaps
+epoch = mode(diff(time));
+t1 = time(1) - floor(time(1));
+time = (0:numel(time)-1)'*epoch + t1;
 
 %% Create figure
 figure1 = figure;
@@ -63,7 +68,6 @@ activityPlot = area(axes1,time,activity);
 set(activityPlot,'FaceColor',[.2 .2 .2],'EdgeColor',[.2 .2 .2],'DisplayName','Activity');
 csPlot = plot(axes1,time,CS);
 set(csPlot,'Color',[.6 .6 .6],'LineWidth',1,'DisplayName','Circadian Stimulus');
-datetick2;
 xlim(axes1,[floor(time(1)) ceil(time(end))]);
 set(axes1,'xtick',floor(time(1)):1:ceil(time(end)));
 % ymax = ceil(max([max(activity),max(CS)])/.5)*.5;
