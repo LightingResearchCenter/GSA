@@ -1,10 +1,9 @@
-function batchSleep
+function batchSleepBitFlip
 %BATCHANALYSIS Summary of this function goes here
 %   Detailed explanation goes here
 [parentDir,~,~] = fileparts(pwd);
-CDFtoolkit = fullfile(parentDir,'LRC-CDFtoolkit');
 DaysimeterSleepAlgorithm = fullfile(parentDir,'DaysimeterSleepAlgorithm');
-addpath(CDFtoolkit,DaysimeterSleepAlgorithm);
+addpath(DaysimeterSleepAlgorithm);
 
 
 %% File handling
@@ -12,7 +11,7 @@ projectFolder = fullfile([filesep,filesep],'root','projects',...
     'GSA_Daysimeter','Colorado Daysimeter data');
 sleepLogPath = fullfile(projectFolder,'sleepLog.xlsx');
 cropLogPath = fullfile(projectFolder,'cropLog.xlsx');
-cdfFolder = fullfile(projectFolder,'cdfData');
+fileFolder = fullfile(projectFolder,'processedData');
 resultsFolder = fullfile(projectFolder,'results');
 
 % Import the sleep log
@@ -23,23 +22,20 @@ sleepLog = struct;
 cropLog = struct;
 [cropLog.subject,cropLog.startTime,cropLog.stopTime] = importCropLog(cropLogPath);
 
-% Get a listing of all CDF files in the folder
-cdfList = dir([cdfFolder,filesep,'*.cdf']);
+% Get a listing of all edited files in the folder
+fileList = dir([fileFolder,filesep,'*Processed.txt']);
 
 %% Preallocate output
-nCDF = numel(cdfList);
-output = cell(nCDF,1);
+nFile = numel(fileList);
+output = cell(nFile,1);
 
 %% Begin main loop
-for i1 = 1:nCDF
-    %% Load CDF
-    data = ProcessCDF(fullfile(cdfFolder,cdfList(i1).name));
-    subject = str2double(data.GlobalAttributes.subjectID{1});
-    if subject == 9
-        pause
-    end
-    time = data.Variables.time - 2/24; % Adjust from Eastern to Mountain Time
-    activity = data.Variables.activity;
+for i1 = 1:nFile
+    %% Load File
+    [time,~,~,~,activity] = importBitFlip(fullfile(fileFolder,fileList(i1).name));
+    temp = regexp(fileList(i1).name,'(\d*)','tokens');
+    subject = str2double(temp{1});
+    time = time - 2/24; % Adjust from Eastern to Mountain Time
     
     %% Match file to crop log
     cLog = cropLog.subject == subject;

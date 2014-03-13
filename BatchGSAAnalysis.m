@@ -136,8 +136,8 @@ for i1 = 1:lengthSub
                 sleepData.MeanSleepBout{i1},sleepData.MeanWakeBout{i1}] = ...
                 AnalyzeFile(dTime,AI,subLog.bedtime,subLog.getuptime,true);
 
-            dt = etime(datevec(dTime(2)),datevec(dTime(1)));
-            [sleepData.actiIS{i1},sleepData.actiIV{i1}] = IS_IVcalc(AI,dt);
+            epoch = mode(diff(dTime));
+            [sleepData.actiIS{i1},sleepData.actiIV{i1}] = IS_IVcalc(AI,epoch);
             
             if sleepLogMode == 2
                 sleepData.userBedLogs{i1} = sum(subLog.bedlog);
@@ -187,8 +187,8 @@ for i1 = 1:lengthSub
             sleepData.MeanSleepBout{i1},sleepData.MeanWakeBout{i1}] = ...
             AnalyzeFile(dTime,AI,subLog.bedtime,subLog.getuptime,true,errorPath);
         
-        dt = etime(datevec(dTime(2)),datevec(dTime(1)));
-        [sleepData.actiIS{i1},sleepData.actiIV{i1}] = IS_IVcalc(AI,dt);
+        epoch = etime(datevec(dTime(2)),datevec(dTime(1)));
+        [sleepData.actiIS{i1},sleepData.actiIV{i1}] = IS_IVcalc(AI,epoch);
         if sleepLogMode == 2
             sleepData.userBedLogs{i1} = sum(subLog.bedlog);
             sleepData.calcBedLogs{i1} = numel(subLog.bedlog) - sleepData.userBedLogs{i1};
