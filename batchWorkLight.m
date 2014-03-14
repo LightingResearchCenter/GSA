@@ -3,17 +3,19 @@ function batchWorkLight
 %   Detailed explanation goes here
 
 %% File handling
-% projectDir = fullfile([filesep,filesep],'root','projects',...
-%     'GSA_Daysimeter','Colorado Daysimeter data');
-projectDir = 'data';
-cropLogPath = fullfile(projectDir,'phasorCropLog.mat');
-% fileDir = fullfile(projectDir,'processedData');
-fileDir = projectDir;
-% resultsDir = fullfile(projectDir,'results');
-resultsDir = projectDir;
+projectDir = fullfile([filesep,filesep],'root','projects',...
+    'GSA_Daysimeter','Colorado Daysimeter data');
+% projectDir = 'data';
+cropLogPath = fullfile(projectDir,'phasorCropLog.xlsx');
+fileDir = fullfile(projectDir,'processedData');
+% fileDir = projectDir;
+resultsDir = fullfile(projectDir,'results');
+% resultsDir = projectDir;
 
 % Import the crop log
-load(cropLogPath);
+cropLog = struct;
+[cropLog.subject,cropLog.startTime,cropLog.stopTime,...
+    cropLog.startRm1,cropLog.stopRm1] = importCropLog(cropLogPath);
 
 % Get a listing of all CDF files in the folder
 fileList = dir([fileDir,filesep,'*.txt']);
@@ -31,6 +33,7 @@ for i1 = 1:nFile
     [time,Lux,~,CS,~] = importBitFlip(fullfile(fileDir,fileList(i1).name));
     temp = regexp(fileList(i1).name,'(\d*)','tokens');
     subject = str2double(temp{1});
+    output.subject{i1} = subject;
     time = time - 2/24; % Adjust from Eastern to Mountain time
     
     %% Match file to crop log
@@ -57,9 +60,8 @@ for i1 = 1:nFile
         continue;
     end
     
-    output.subject(i1) = subject;
     %% Perform analysis
-    [output.workCS(i1),output.workLux(i1)] = workLight(time,CS,Lux);
+    [output.workCS{i1},output.workLux{i1}] = workLight(time,CS,Lux);
     
 end
 
