@@ -28,6 +28,7 @@ GMToff = -7;
 %% Preallocate output
 nFile = numel(fileList);
 output = struct;
+output.subject = cell(nFile,1);
 output.phasorMagnitude = cell(nFile,1);
 output.phasorAngle = cell(nFile,1);
 output.IS = cell(nFile,1);
@@ -43,6 +44,7 @@ for i1 = 1:nFile
     [time,Lux,~,CS,activity] = importBitFlip(fullfile(fileDir,fileList(i1).name));
     temp = regexp(fileList(i1).name,'(\d*)','tokens');
     subject = str2double(temp{1});
+    output.subject{i1} = subject;
     time = time - 2/24; % Adjust from Eastern to Mountain time
     
     %% Match file to crop log
