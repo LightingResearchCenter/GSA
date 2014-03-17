@@ -3,28 +3,25 @@ function [workCS,workLux] = workLight(time,CS,Lux)
 %   Detailed explanation goes here
 
 
-%% Find work days and remove weekends
+% Find work days
 [D,~] = weekday(time);
 wkIdx = D >= 2 & D <= 6; % Work week of Monday through Friday
-% Remove weekends
-time(~wkIdx) = [];
-CS(~wkIdx) = [];
-Lux(~wkIdx) = [];
 
-%% Find time during workday and remove the rest
+% Find time during workday and remove the rest
 hour = mod(time,1)*24; % convert datenum to hour of day
 hrIdx = hour >= 8 & hour <= 13; % Work day of 8 AM through 5 PM
-% Remove outside the work day
-CS(~hrIdx) = [];
-Lux(~hrIdx) = [];
 
-%% Remove zero values
-CS(CS<=0) = [];
-Lux(Lux<=0) = [];
+% Find non-zero values
+csNzIdx = CS>0;
+lxNzIdx = Lux>0;
 
-%% Average the work day data
-workCS = mean(CS);
-workLux = 10^mean(log10(Lux));
+% Find indicies of data to average
+csIdx = wkIdx & hrIdx & csNzIdx;
+lxIdx = wkIdx & hrIdx & lxNzIdx;
+
+% Average the work day data
+workCS = mean(CS(csIdx));
+workLux = 10^mean(log10(Lux(lxIdx)));
 
 end
 
