@@ -16,8 +16,8 @@ hrActivity = zeros(n,1);
 % Average data for each hour
 for i1 = 1:n
     idx = time == hrTime(i1);
-    hrLux(i1) = 10^mean(log10(Lux(idx)));
-    hrCLA(i1) = 10^mean(log10(CLA(idx)));
+    hrLux(i1) = logaverage(Lux(idx));
+    hrCLA(i1) = logaverage(CLA(idx));
     hrCS(i1) = mean(CS(idx));
     hrActivity(i1) = mean(activity(idx));
 end
