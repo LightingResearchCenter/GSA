@@ -3,7 +3,7 @@ function [hrTime,hrLux,hrCLA,hrCS,hrActivity] = hourlyAverage(time,Lux,CLA,CS,ac
 %   Detailed explanation goes here
 
 % Round time to the next hour
-time = ceil(time*24)/24;
+time = floor(time) + datenum2hour(time)/24;
 hrTime = unique(time);
 
 % Preallocate variables
