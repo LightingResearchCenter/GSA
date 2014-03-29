@@ -13,7 +13,7 @@ template = ['hour',varNameArray'];
 template(2,1) = {[]};
 averageStruct = struct(template{:});
 
-averageStruct.hour = (0:23)';
+averageStruct.hour = sort(unique(hourArray));
 
 varsToLogAverage = {'luxCloudy','claCloudy','luxSunny','claSunny'};
 

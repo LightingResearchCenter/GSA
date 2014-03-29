@@ -9,7 +9,7 @@ wkIdx = D >= 2 & D <= 6; % Work week of Monday through Friday
 
 % Find time during workday and remove the rest
 hour = mod(time,1)*24; % convert datenum to hour of day
-hrIdx = hour >= 8 & hour <= 13; % Work day of 8 AM through 5 PM
+hrIdx = hour >= 8 & hour < 17; % Work day of 8 AM through 5 PM
 
 % Find non-zero values
 csNzIdx = CS>0;
