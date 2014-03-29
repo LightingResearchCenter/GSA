@@ -3,9 +3,6 @@ function batchhourlyseattle
 %   Detailed explanation goes here
 
 % File handling
-[parentDir,~,~] = fileparts(pwd);
-addpath(parentDir);
-
 projectDir = fullfile([filesep,filesep],'root','projects',...
     'GSA_Daysimeter','GSA Daysimeters on a Stick - Seattle Data');
 indexPath = fullfile(projectDir,'index.xlsx');
@@ -33,6 +30,7 @@ hourlyData = struct(...
     'mountStyle'    , emptyCell ,...
     'orientation'	, emptyCell ,...
     'time'          , emptyCell ,...
+    'hour'          , emptyCell ,...
     'lux'           , emptyCell ,...
     'cla'           , emptyCell ,...
     'cs'            , emptyCell ,...
@@ -42,30 +40,22 @@ hourlyData = struct(...
 
 % Begin main loop
 for i1 = 1:nFile
-    % Reassign information from index
-    hourlyData(i1).daysimeter	= index.daysimeter(i1);
-    hourlyData(i1).mountStyle	= index.mountStyle(i1);
-    hourlyData(i1).orientation	= index.orientation(i1);
-    
     % Load file
     daysimeter = importprocesseddaysimeter(filePathArray{i1});
+    
+    % Add hour array
+    daysimeter.hour = datenum2hour(daysimeter.time);
+    
     % Crop file
     daysimeter = trimdata(daysimeter,index.startTime(i1),index.stopTime(i1));
-    % Adjust from Eastern to Mountain time
-    daysimeter.time = daysimeter.time - 2/24;
+    
     % Chop low end lux and CLA to threshold of 0.005
     threshold = 0.005;
     daysimeter.lux = choptothreshold(daysimeter.lux,threshold);
     daysimeter.cla = choptothreshold(daysimeter.cla,threshold);
     
     % Average data
-    [hourlyData(i1).time,hourlyData(i1).lux,hourlyData(i1).cla,...
-        hourlyData(i1).cs,hourlyData(i1).activity] = ...
-        hourlyAverage(daysimeter.time,daysimeter.lux,daysimeter.cla,...
-        daysimeter.cs,daysimeter.activity);
-    
-    % Find sunny days
-    hourlyData(i1).sunnyDay = issunny(hourlyData(i1).time,sunnyDayArray);
+    hourlyData(i1) = hourlyaverage(daysimeter,index.daysimeter(i1),index.mountStyle(i1),index.orientation(i1),sunnyDayArray);
     
     % Convert data to cell
     dataCell = hourly2cell(hourlyData(i1));
