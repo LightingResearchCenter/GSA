@@ -4,7 +4,7 @@ function batchWorkLight
 
 %% File handling
 projectDir = fullfile([filesep,filesep],'root','projects',...
-    'GSA_Daysimeter','Colorado Daysimeter data');
+    'GSA_Daysimeter','GrandJunction_Colorado_site_data','Daysimeter_data');
 % projectDir = 'data';
 cropLogPath = fullfile(projectDir,'phasorCropLog.xlsx');
 fileDir = fullfile(projectDir,'processedData');
