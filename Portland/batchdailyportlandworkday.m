@@ -34,7 +34,7 @@ for i1 = 1:nEntries
     outputCell = [header;dataCell];
     
     % Save output to spreadsheet
-    sheet = ['daysimeter ',num2str(dailyData(i1).daysimeter)];
+    sheet = dailyData(i1).location{1};
     xlswrite(outputExcelPath,outputCell,sheet);
 end
 
@@ -61,6 +61,7 @@ for i1 = 1:nVariables
     else
         cellArray = num2cell(tempArray);
     end
+    cellArray = cellArray(:);
     paddingCell = cell(paddingNeeded(i1),1);
     cellArrayPadded = [cellArray;paddingCell];
     dataCell = [dataCell,cellArrayPadded];
