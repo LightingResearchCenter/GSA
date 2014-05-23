@@ -34,7 +34,7 @@ for i1 = 1:nEntries
     outputCell = [header;dataCell];
     
     % Save output to spreadsheet
-    sheet = ['daysimeter ',num2str(dailyData(i1).daysimeter)];
+    sheet = dailyData(i1).location{1};
     xlswrite(outputExcelPath,outputCell,sheet);
 end
 
