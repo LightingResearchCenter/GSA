@@ -7,7 +7,8 @@ function batchdailyportlandworkday
 addpath(parentDir);
 
 projectDir = fullfile([filesep,filesep],'root','projects',...
-    'GSA_Daysimeter','GSA Daysimeters on a Stick - Portland Data');
+    'GSA_Daysimeter','Portland_Oregon_site_data',...
+    'Daysimeter_Stick_and_Window_data');
 resultsDir = fullfile(projectDir,'results');
 
 inputPath = fullfile(resultsDir,'hourlyAverageWorkDay.mat');

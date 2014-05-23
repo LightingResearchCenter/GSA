@@ -4,7 +4,8 @@ function batchplotportlandworkday
 
 % File handling
 projectDir = fullfile([filesep,filesep],'root','projects',...
-    'GSA_Daysimeter','GSA Daysimeters on a Stick - Portland Data');
+    'GSA_Daysimeter','Portland_Oregon_site_data',...
+    'Daysimeter_Stick_and_Window_data');
 indexPath = fullfile(projectDir,'index.xlsx');
 fileDir = fullfile(projectDir,'Original and Corrected Files');
 plotDir = fullfile(projectDir,'plots');
