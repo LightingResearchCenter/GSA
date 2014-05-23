@@ -19,34 +19,11 @@ printDir = fullfile(projectDir,'daysigrams');
 listing = dir([cdfDir,filesep,'*.cdf']);
 nCdf = numel(listing);
 
-% Find the useable durations
-% Preallocate variables
-duration = zeros(nCdf,1);
-daysigramDuration = zeros(nCdf,1);
-
-for i1 = 1:nCdf
-    cdfPath = fullfile(cdfDir,listing(i1).name);
-    
-    % Load the data
-    DaysimeterData = ProcessCDF(cdfPath);
-    logicalArray = logical(DaysimeterData.Variables.logicalArray);
-    timeArray = DaysimeterData.Variables.time(logicalArray);
-    duration(i1) = timeArray(end) - timeArray(1);
-    daysigramDuration(i1) = ceil(timeArray(end)) - floor(timeArray(1));
-end
-
-display(['Min  duration: ',num2str(min(duration))]);
-display(['Mean duration: ',num2str(mean(duration))]);
-display(['Max  duration: ',num2str(max(duration))]);
-display('');
-daysigramDuration = max(daysigramDuration);
-display(['Daysigram duration: ',num2str(daysigramDuration)]);
-
 % Create Daysigrams
 % Preallocate variables
 lightMeasure = 'cs';
 lightRange = [0,1];
-nDaysPerSheet = ceil(daysigramDuration/2);
+nDaysPerSheet = 11;
 for i1 = 1:nCdf
     cdfPath = fullfile(cdfDir,listing(i1).name);
     
