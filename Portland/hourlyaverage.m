@@ -1,4 +1,4 @@
-function hourlyStruct = hourlyaverage(daysimeterStruct,daysimeterSN,mountStyle,orientation,sunnyDayArray)
+function hourlyStruct = hourlyaverage(daysimeterStruct,daysimeterSN,location,sunnyDayArray)
 %HOURLYAVERAGE Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -6,13 +6,12 @@ function hourlyStruct = hourlyaverage(daysimeterStruct,daysimeterSN,mountStyle,o
 hourlyStruct = struct;
 
 % Reassign variables from index
-hourlyStruct.daysimeter = daysimeterSN;
-hourlyStruct.mountStyle = mountStyle;
-hourlyStruct.orientation = orientation;
+hourlyStruct.daysimeter = {daysimeterSN};
+hourlyStruct.location = {location};
 
 dayHourArray = floor(daysimeterStruct.time) + daysimeterStruct.hour/24;
 
-varsToSkip = {'time','daysimeter','mountStyle','orientation','hour'};
+varsToSkip = {'time','daysimeter','location','hour'};
 
 varNameArray = fieldnames(daysimeterStruct);
 nVar = numel(varNameArray);

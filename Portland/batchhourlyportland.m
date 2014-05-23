@@ -6,57 +6,60 @@ function batchhourlyportland
 projectDir = fullfile([filesep,filesep],'root','projects',...
     'GSA_Daysimeter','Portland_Oregon_site_data',...
     'Daysimeter_Stick_and_Window_data');
-indexPath = fullfile(projectDir,'index.xlsx');
-fileDir = fullfile(projectDir,'Original and Corrected Files');
+cdfDir = fullfile(projectDir,'editedData');
 resultsDir = fullfile(projectDir,'results');
 
 outputExcelPath = fullfile(resultsDir,['hourlyAverage_',datestr(now,'yyyy-mm-dd_HH-MM'),'.xlsx']);
 outputMatPath = fullfile(resultsDir,'hourlyAverage.mat');
 
-% Import the index
-index = importindex(indexPath);
-
 % Get a listing of all CDF files in the folder
-filePathArray = fullfile(fileDir,index.fileName);
+listing = dir([cdfDir,filesep,'*.cdf']);
 
 % Specify dates of sunny days
-sunnyDayArray = datenum(2014,2,27);
+sunnyDayArray = [datenum(2014,4,30);...
+                 datenum(2014,5, 7);...
+                 datenum(2014,5,11);...
+                 datenum(2014,5,13)];
 
 % Preallocate output
-nFile = numel(filePathArray);
+nFile = numel(listing);
 
 emptyCell = cell(nFile,1);
 hourlyData = struct(...
     'daysimeter'    , emptyCell ,...
-    'mountStyle'    , emptyCell ,...
-    'orientation'	, emptyCell ,...
+    'location'      , emptyCell ,...
     'time'          , emptyCell ,...
     'hour'          , emptyCell ,...
     'lux'           , emptyCell ,...
     'cla'           , emptyCell ,...
     'cs'            , emptyCell ,...
-    'activity'      , emptyCell ,...
     'sunnyDay'      , emptyCell  ...
     );
 
 % Begin main loop
 for i1 = 1:nFile
     % Load file
-    daysimeter = importprocesseddaysimeter(filePathArray{i1});
+    filePath = fullfile(cdfDir,listing(i1).name);
+    Data = ProcessCDF(filePath);
+    serialNumber = Data.GlobalAttributes.deviceSN{1};
+    location = Data.GlobalAttributes.subjectID{1};
+    logicalArray = logical(Data.Variables.logicalArray);
+    Daysimeter = struct;
+    Daysimeter.time = Data.Variables.time(logicalArray);
+    Daysimeter.lux = Data.Variables.illuminance(logicalArray);
+    Daysimeter.cla = Data.Variables.CLA(logicalArray);
+    Daysimeter.cs = Data.Variables.CS(logicalArray);
     
     % Add hour array
-    daysimeter.hour = datenum2hour(daysimeter.time);
-    
-    % Crop file
-    daysimeter = trimdata(daysimeter,index.startTime(i1),index.stopTime(i1));
+    Daysimeter.hour = datenum2hour(Daysimeter.time);
     
     % Chop low end lux and CLA to threshold of 0.005
     threshold = 0.005;
-    daysimeter.lux = choptothreshold(daysimeter.lux,threshold);
-    daysimeter.cla = choptothreshold(daysimeter.cla,threshold);
+    Daysimeter.lux = choptothreshold(Daysimeter.lux,threshold);
+    Daysimeter.cla = choptothreshold(Daysimeter.cla,threshold);
     
     % Average data
-    hourlyData(i1) = hourlyaverage(daysimeter,index.daysimeter(i1),index.mountStyle(i1),index.orientation(i1),sunnyDayArray);
+    hourlyData(i1) = hourlyaverage(Daysimeter,serialNumber,location,sunnyDayArray);
     
     % Convert data to cell
     dataCell = hourly2cell(hourlyData(i1));
@@ -66,7 +69,7 @@ for i1 = 1:nFile
     outputCell = [header;dataCell];
     
     % Save output to spreadsheet
-    sheet = ['daysimeter ',num2str(index.daysimeter(i1))];
+    sheet = location;
     xlswrite(outputExcelPath,outputCell,sheet);
 
 end
@@ -99,6 +102,7 @@ for i1 = 1:nVariables
     else
         cellArray = num2cell(tempArray);
     end
+    cellArray = cellArray(:);
     paddingCell = cell(paddingNeeded(i1),1);
     cellArrayPadded = [cellArray;paddingCell];
     dataCell = [dataCell,cellArrayPadded];
