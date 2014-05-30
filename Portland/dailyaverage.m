@@ -12,6 +12,10 @@ dailyStruct.hour = sort(unique(hourArray));
 
 nHours = numel(dailyStruct.hour);
 
+dailyStruct.luxAll = zeros(nHours,1);
+dailyStruct.claAll = zeros(nHours,1);
+dailyStruct.csAll = zeros(nHours,1);
+
 dailyStruct.luxCloudy = zeros(nHours,1);
 dailyStruct.claCloudy = zeros(nHours,1);
 dailyStruct.csCloudy = zeros(nHours,1);
@@ -24,6 +28,10 @@ for i1 = 1:numel(dailyStruct.hour)
     idxHour = hourArray == dailyStruct.hour(i1);
     idxCloudy = ~hourlyStruct.sunnyDay & idxHour;
     idxSunny = hourlyStruct.sunnyDay & idxHour;
+    
+    dailyStruct.luxAll(i1)       = logaverage(hourlyStruct.lux(idxHour));
+    dailyStruct.claAll(i1)       = logaverage(hourlyStruct.cla(idxHour));
+    dailyStruct.csAll(i1)        = mean(hourlyStruct.cs(idxHour));
     
     dailyStruct.luxCloudy(i1)       = logaverage(hourlyStruct.lux(idxCloudy));
     dailyStruct.claCloudy(i1)       = logaverage(hourlyStruct.cla(idxCloudy));
