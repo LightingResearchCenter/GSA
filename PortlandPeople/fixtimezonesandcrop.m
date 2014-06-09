@@ -10,9 +10,9 @@ projectDir = fullfile([filesep,filesep],'root','projects',...
     'GSA_Daysimeter','Portland_Oregon_site_data',...
     'Daysimeter_People_Data');
 
-oldDir = fullfile(projectDir,'originalData');
+oldDir = fullfile(projectDir,'summerOriginalData');
 
-newDir = fullfile(projectDir,'editedData');
+newDir = fullfile(projectDir,'summerEditedData');
 
 % Find CDFs in folder
 listing = dir([oldDir,filesep,'*.cdf']);
@@ -40,6 +40,7 @@ for i1 = 1:nCdf
         logicalArray = true(size(timeArray));
         plotcrop(hCrop,timeArray,csArray,activityArray,logicalArray)
         plotcroptitle(subjectID,'Select Start of Data');
+        zoom(hCrop,'on');
         pause
         [cropStart,~] = ginput(1);
         zoom(hCrop,'out');
@@ -61,6 +62,7 @@ for i1 = 1:nCdf
     % Save new file
     RewriteCDF(DaysimeterData, newPath);
     
+    clc;
 end
 
 close(hCrop);
@@ -68,7 +70,7 @@ close(hCrop);
 end
 
 function needsCropping = cropdialog
-button = questdlg('Is this data cropped correctly?','Crop Data','Yes','No','No');
+button = questdlg('Is this data cropped correctly?','Crop Data','Yes','No','Yes');
 switch button
     case 'Yes'
         needsCropping = false;
