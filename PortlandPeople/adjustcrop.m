@@ -9,6 +9,10 @@ cropStartArray = find(D == -1);
 cropStartArray = cropStartArray + 1;
 cropStopArray  = find(D ==  1);
 
+if numel(cropStartArray)<1 || numel(cropStopArray)<1
+    return;
+end
+
 % Ignore cropping at ends of data
 if ~logicalArray(1)
     cropStopArray(1) = [];
@@ -35,8 +39,8 @@ for i1 = 1:nStarts
     durationDays = stopTime - startTime;
     durationHrs  = durationDays*24; % duration in hours
     
-    % ignore blocks less than 3 hours
-    if durationHrs < 3
+    % ignore blocks less than 2 hours
+    if durationHrs < 2
         logicalArray(cropStartArray(i1):cropStopArray(i1)) = true;
         continue;
     end
