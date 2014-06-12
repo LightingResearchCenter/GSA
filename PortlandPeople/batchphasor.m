@@ -31,7 +31,14 @@ Output = struct(...
     'interdailyStability'   , {[]} ,...
     'intradailyVariability' , {[]} ,...
     'meanNonzeroCs'         , {[]} ,...
-    'meanLogLux'            , {[]} );
+    'meanLogLux'            , {[]} ,...
+    'meanNonzeroActivity'   , {[]} ,...
+    'meanWorkdayNonzeroCs'         , {[]} ,...
+    'meanWorkdayLogLux'            , {[]} ,...
+    'meanWorkdayNonzeroActivity'   , {[]} ,...
+    'meanPostWorkdayNonzeroCs'         , {[]} ,...
+    'meanPostWorkdayLogLux'            , {[]} ,...
+    'meanPostWorkdayNonzeroActivity'   , {[]} );
 
 for i1 = 1:nCdf
     cdfPath = fullfile(cdfDir,listing(i1).name);
@@ -39,6 +46,11 @@ for i1 = 1:nCdf
     % Load the data
     DaysimeterData = ProcessCDF(cdfPath);
     logicalArray = logical(DaysimeterData.Variables.logicalArray);
+    timeArray = DaysimeterData.Variables.time;
+    
+    % Adjust cropping
+    logicalArray = adjustcrop(timeArray,logicalArray);
+    
     timeArray = DaysimeterData.Variables.time(logicalArray);
     activityArray = DaysimeterData.Variables.activity(logicalArray);
     csArray = DaysimeterData.Variables.CS(logicalArray);
@@ -68,6 +80,26 @@ for i1 = 1:nCdf
     Phasor = phasoranalysis(timeArray,csArray,activityArray);
     Average = daysimeteraverages(csArray,illuminanceArray,activityArray);
     
+    % Workdays & Post-Work
+    [workStartArray,workEndArray] = createworkday(timeArray);
+    workIdx = false(size(timeArray));
+    postWorkIdx = false(size(timeArray));
+    for j1 = 1:numel(workStartArray)
+        tempWorkIdx = timeArray > workStartArray(j1) & timeArray <= workEndArray(j1);
+        workIdx = workIdx | tempWorkIdx;
+        
+        diffBedTime = bedTimeArray - workEndArray(j1);
+        currentBedTime = bedTimeArray(diffBedTime<1 & diffBedTime>0);
+        if numel(currentBedTime) == 1
+            tempPostWorkIdx = timeArray > workEndArray(j1) & timeArray <=currentBedTime;
+            postWorkIdx = postWorkIdx | tempPostWorkIdx;
+        end
+    end
+    WorkAverage = daysimeteraverages(csArray(workIdx),...
+        illuminanceArray(workIdx),activityArray(workIdx));
+    PostWorkAverage = daysimeteraverages(csArray(postWorkIdx),...
+        illuminanceArray(postWorkIdx),activityArray(postWorkIdx));
+    
     % Assign results to output struct
     Output(i1,1).subject               = subject;
     Output(i1,1).phasorMagnitude       = Phasor.magnitude;
@@ -77,6 +109,12 @@ for i1 = 1:nCdf
     Output(i1,1).meanNonzeroCs         = Average.cs;
     Output(i1,1).meanLogLux            = Average.illuminance;
     Output(i1,1).meanNonzeroActivity   = Average.activity;
+    Output(i1,1).meanWorkdayNonzeroCs         = WorkAverage.cs;
+    Output(i1,1).meanWorkdayLogLux            = WorkAverage.illuminance;
+    Output(i1,1).meanWorkdayNonzeroActivity   = WorkAverage.activity;
+    Output(i1,1).meanPostWorkdayNonzeroCs         = PostWorkAverage.cs;
+    Output(i1,1).meanPostWorkdayLogLux            = PostWorkAverage.illuminance;
+    Output(i1,1).meanPostWorkdayNonzeroActivity   = PostWorkAverage.activity;
     
 end
 
@@ -90,5 +128,21 @@ outputCell(1,:) = prettyVarNameArray;
 xlswrite([resultsPath,'.xlsx'],outputCell);
 % Save results to a Matlab file
 save([resultsPath,'.mat'],'Output');
+
+end
+
+
+function [workStartArray,workEndArray] = createworkday(timeArray)
+
+workStart = 8/24;
+workEnd   = 17/24;
+
+dayArray       = unique(floor(timeArray));
+dayOfWeekArray = weekday(dayArray); % Sunday = 1, Monday = 2, etc.
+workDaysIdx    = dayOfWeekArray >= 1 & dayOfWeekArray <= 6;
+workDayArray   = dayArray(workDaysIdx);
+
+workStartArray = workDayArray + workStart;
+workEndArray   = workDayArray + workEnd;
 
 end
