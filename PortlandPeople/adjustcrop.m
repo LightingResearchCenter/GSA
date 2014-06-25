@@ -2,6 +2,9 @@ function logicalArray = adjustcrop(timeArray,logicalArray)
 %ADJUSTCROP Summary of this function goes here
 %   Detailed explanation goes here
 
+% Calculate the sampling epoch
+epoch_days = mode(diff(timeArray));
+
 % Find blocks marked to be removed
 D = diff(double(logicalArray));
 
@@ -13,12 +16,17 @@ if numel(cropStartArray)<1 || numel(cropStopArray)<1
     return;
 end
 
+newLogicalArray = true(size(logicalArray));
+tempLogicalArray = newLogicalArray;
+
 % Ignore cropping at ends of data
 if ~logicalArray(1)
+    newLogicalArray(1:cropStopArray(1)) = false;
     cropStopArray(1) = [];
 end
 
 if ~logicalArray(end)
+    newLogicalArray(cropStartArray(end):end) = false;
     cropStartArray(end) = [];
 end
 
@@ -41,22 +49,32 @@ for i1 = 1:nStarts
     
     % ignore blocks less than 2 hours
     if durationHrs < 2
-        logicalArray(cropStartArray(i1):cropStopArray(i1)) = true;
         continue;
     end
     
     % expand the block to a multiple of 24 hours
     modDuration = mod(durationDays,1);
-    paddingTimeDays = (1-modDuration)/2;
+    paddingTimeDays = (1-modDuration);
     newStartTime = startTime - paddingTimeDays;
-    newStopTime  = stopTime  + paddingTimeDays;
+    newStopTime  = stopTime;
     newCropBlock = ~(timeArray >= newStartTime & timeArray <= newStopTime);
     
+    % check that the new crop block does not overlapp anything else
+    % try all possible combinations if it does
+    ii = 0;
+    while any(~tempLogicalArray & ~newCropBlock) && (newStartTime <= startTime) && (newStopTime >= stopTime)
+        newStartTime = startTime - paddingTimeDays + ii*epoch_days;
+        newStopTime  = stopTime  + ii*epoch_days;
+        newCropBlock = ~(timeArray >= newStartTime & timeArray <= newStopTime);
+        ii = ii + 1;
+    end
+    
     % combine new crop block with existing logical array
-    logicalArray = logicalArray & newCropBlock;
+    tempLogicalArray = tempLogicalArray & newCropBlock;
     
 end
 
+logicalArray = newLogicalArray & tempLogicalArray;
 
 end
 
