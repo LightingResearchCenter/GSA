@@ -39,7 +39,7 @@ for i1 = 1:nCdf
         continue;
     end
     
-    sheetTitle = ['GSA (Portland, Oregon) Subject: ',subjectID];
+    sheetTitle = ['GSA (Portland, Oregon) Summer Subject: ',subjectID];
     fileID = ['sub',subjectID];
     
     % Generate the Daysigram
