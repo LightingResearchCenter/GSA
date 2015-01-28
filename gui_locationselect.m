@@ -2,8 +2,8 @@ function [plainLocation,varargout] = gui_locationselect
 %GUI_LOCATIONSELECT GUI to select the desired project
 %   Detailed explanation goes here
 
-plainLocationArray  = {'grandjunction','portland','seattle'};
-diplayLocationArray = {'Grand Junction, CO','Portland, OR','Seattle, WA'};
+plainLocationArray  = {'grandjunction','portland','seattle','dc'};
+diplayLocationArray = {'Grand Junction, CO','Portland, OR','Seattle, WA','Washington, D.C.'};
 
 choice = menu('Choose a project location',diplayLocationArray);
 

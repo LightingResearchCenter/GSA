@@ -34,6 +34,9 @@ switch location
     case {'seattle','washingtion','wa'}
         Paths.location = fullfile(Paths.gsa,...
             'Seattle_Washington','Daysimeter_Stationary_Data');
+    case {'dc'}
+        Paths.location = fullfile(Paths.gsa,...
+            'WashingtonDC','Daysimeter_Stationary_Data');
     otherwise
         error('Unknown project.');
 end
