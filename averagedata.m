@@ -1,4 +1,4 @@
-function averagedata
+function dateRange = averagedata
 %AVERAGEDATA Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -22,17 +22,23 @@ sunnyDayArray = importweatherlog(weatherLogPath);
 workStart = 8;
 workEnd   = 17;
 hourArray = (workStart+1:workEnd)';
-labels = {'hour','all lux','all cs','sunny lux','sunny cs','cloudy lux','cloudy cs'};
+labels = {'hour','arithmetic mean all lux','geomean all lux','arithmetic mean all cs','arithmetic mean sunny lux','geomean sunny lux','arithmetic mean sunny cs','arithmetic mean cloudy lux','geomean cloudy lux','arithmetic mean cloudy cs'};
 template = zeros(size(hourArray));
-allLux = template;
+
+allLuxArithmeticMean = template;
+allLuxGeoMean = template;
 allCs = template;
-sunnyLux = template;
+sunnyLuxArithmeticMean = template;
+sunnyLuxGeoMean = template;
 sunnyCs = template;
-cloudyLux = template;
+cloudyLuxArithmeticMean = template;
+cloudyLuxGeoMean = template;
 cloudyCs = template;
 
 nFiles = numel(cdfPathArray);
-
+dateRange = cell(nFiles+1,2);
+dateRange{1,1} = 'start date';
+dateRange{1,2} = 'end date';
 for i1 = 1:nFiles
     % Import data
     Data = ProcessCDF(cdfPathArray{i1});
@@ -52,6 +58,19 @@ for i1 = 1:nFiles
     csArray          = Data.Variables.CS(newLogicalArray);
     illuminanceArray = Data.Variables.illuminance(newLogicalArray);
     activityArray    = Data.Variables.activity(newLogicalArray);
+    
+    
+    % Crop DC December 2014
+    if strcmpi(plainLocation,'dc') && strcmpi(plainSession,'december')
+        keepIdx = timeArray > datenum(2014,12,4) & timeArray < datenum(2014,12,20);
+        timeArray        = timeArray(keepIdx);
+        csArray          = csArray(keepIdx);
+        illuminanceArray = illuminanceArray(keepIdx);
+        activityArray    = activityArray(keepIdx);
+    end
+    
+    dateRange{i1+1,1} = datestr(min(timeArray));
+    dateRange{i1+1,2} = datestr(max(timeArray));
     
     % Crop data to work times
     workIdx = createworkday(timeArray,workStart,workEnd);
@@ -78,19 +97,22 @@ for i1 = 1:nFiles
     for i2 = 1:numel(hourArray)
         currentHour = timeArrayHrs == hourArray(i2);
         % Overall averages
-        allLux(i2) = logaverage(illuminanceArray(currentHour));
+        allLuxGeoMean(i2) = geomean(illuminanceArray(currentHour));
+        allLuxArithmeticMean(i2) = mean(illuminanceArray(currentHour));
         allCs(i2)  = mean(csArray(currentHour));
         % Sunny averages
         currentSunny = sunnyDayLogical & currentHour;
-        sunnyLux(i2) = logaverage(illuminanceArray(currentSunny));
+        sunnyLuxGeoMean(i2) = geomean(illuminanceArray(currentSunny));
+        sunnyLuxArithmeticMean(i2) = mean(illuminanceArray(currentSunny));
         sunnyCs(i2)  = mean(csArray(currentSunny));
         % Cloudy averages
         currentCloudy = ~sunnyDayLogical & currentHour;
-        cloudyLux(i2) = logaverage(illuminanceArray(currentCloudy));
+        cloudyLuxGeoMean(i2) = geomean(illuminanceArray(currentCloudy));
+        cloudyLuxArithmeticMean(i2) = mean(illuminanceArray(currentCloudy));
         cloudyCs(i2)  = mean(csArray(currentCloudy));
     end
        
-    dataMat = [hourArray,allLux,allCs,sunnyLux,sunnyCs,cloudyLux,cloudyCs];
+    dataMat = [hourArray,allLuxArithmeticMean,allLuxGeoMean,allCs,sunnyLuxArithmeticMean,sunnyLuxGeoMean,sunnyCs,cloudyLuxArithmeticMean,cloudyLuxGeoMean,cloudyCs];
     dataCell = [labels;num2cell(dataMat)];
     
     % Save output to spreadsheet
