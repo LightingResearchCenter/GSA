@@ -1,9 +1,11 @@
-function dateRange = averagedata
+function averagedata
 %AVERAGEDATA Summary of this function goes here
 %   Detailed explanation goes here
 
 % Enable dependecies
-initializedependencies;
+[github,~,~] = fileparts(pwd);
+circadian = fullfile(github,'circadian');
+addpath(circadian);
 
 % Have user select project location and session
 [plainLocation,displayLocation] = gui_locationselect;
@@ -15,49 +17,69 @@ Paths = initializepaths(plainLocation,plainSession);
 weatherLogPath = fullfile(Paths.logs,'weatherLog.xlsx');
 
 runtime = datestr(now,'yyyy-mm-dd_HHMM');
-resultsPath = fullfile(Paths.results,['hourlyAverage_',runtime,'_GSA_',plainLocation,'_',plainSession,'.xlsx']);
+desktop = 'C:\Users\jonesg5\Desktop\forClaudia';
+resultsPath = fullfile(desktop,['hourlyAverage_',runtime,'_GSA_',plainLocation,'_',plainSession,'.xlsx']);
 
 
 sunnyDayArray = importweatherlog(weatherLogPath);
 workStart = 8;
 workEnd   = 17;
 hourArray = (workStart+1:workEnd)';
-labels = {'hour','arithmetic mean all lux','geomean all lux','arithmetic mean all cs','arithmetic mean sunny lux','geomean sunny lux','arithmetic mean sunny cs','arithmetic mean cloudy lux','geomean cloudy lux','arithmetic mean cloudy cs'};
-template = zeros(size(hourArray));
 
-allLuxArithmeticMean = template;
-allLuxGeoMean = template;
-allCs = template;
-sunnyLuxArithmeticMean = template;
-sunnyLuxGeoMean = template;
-sunnyCs = template;
-cloudyLuxArithmeticMean = template;
-cloudyLuxGeoMean = template;
-cloudyCs = template;
+nFile = numel(cdfPathArray);
+nHour = numel(hourArray);
+template = cell(nHour+2,nFile+1);
 
-nFiles = numel(cdfPathArray);
-dateRange = cell(nFiles+1,2);
-dateRange{1,1} = 'start date';
-dateRange{1,2} = 'end date';
-for i1 = 1:nFiles
+template{1,1} = 'DeviceSN';
+template{2,1} = 'LocationID';
+
+for iHour = 1:nHour
+    thisHour = hourArray(iHour);
+    
+    hourLabel = sprintf('%d:00 - %d:00',thisHour-1,thisHour);
+    template{iHour+2,1} = hourLabel;
+end
+
+Results = struct;
+Results.allLuxGeoMean    = template;
+Results.allCsAriMean     = template;
+Results.sunnyLuxGeoMean  = template;
+Results.sunnyCsAriMean   = template;
+Results.cloudyLuxGeoMean = template;
+Results.cloudyCsAriMean  = template;
+
+varNames = fieldnames(Results);
+nVar = numel(varNames);
+
+for iFile = 1:nFile
     % Import data
-    Data = ProcessCDF(cdfPathArray{i1});
-    locationID      = Data.GlobalAttributes.subjectID{1};
-    deviceSN        = Data.GlobalAttributes.deviceSN{1};
-    logicalArray	= logical(Data.Variables.logicalArray);
+    cdfData = daysimeter12.readcdf(cdfPathArray{iFile});
+    [absTime,relTime,epoch,light,activity,masks,locationID,deviceSN] = daysimeter12.convertcdf(cdfData);
     
-    locationID = [locationID,' D',deviceSN(end-2:end)];
     
-    if exist('Data.Variables.complianceArray','var') ~= 0
-        complianceArray  = logical(Data.Variables.complianceArray);
+    % Skip windows
+    if ~isempty(regexpi(locationID,'window'))
+        continue
+    end
+    
+    logicalArray = masks.observation;
+    
+    if exist('masks.compliance','var') ~= 0
+        complianceArray  = masks.compliance;
     else
         complianceArray = true(size(logicalArray));
     end
     newLogicalArray  = logicalArray & complianceArray;
-    timeArray        = Data.Variables.time(newLogicalArray);
-    csArray          = Data.Variables.CS(newLogicalArray);
-    illuminanceArray = Data.Variables.illuminance(newLogicalArray);
-    activityArray    = Data.Variables.activity(newLogicalArray);
+    timeArray        = absTime.localDateNum(newLogicalArray);
+    csArray          = light.cs(newLogicalArray);
+    illuminanceArray = light.illuminance(newLogicalArray);
+    
+    % Set deviceSN and locationID
+    for iVar = 1:nVar
+        thisVar = varNames{iVar};
+        Results.(thisVar){1,iFile+1} = deviceSN;
+        Results.(thisVar){2,iFile+1} = locationID;
+    end
     
     
     % Crop DC December 2014
@@ -66,11 +88,7 @@ for i1 = 1:nFiles
         timeArray        = timeArray(keepIdx);
         csArray          = csArray(keepIdx);
         illuminanceArray = illuminanceArray(keepIdx);
-        activityArray    = activityArray(keepIdx);
     end
-    
-    dateRange{i1+1,1} = datestr(min(timeArray));
-    dateRange{i1+1,2} = datestr(max(timeArray));
     
     % Crop data to work times
     workIdx = createworkday(timeArray,workStart,workEnd);
@@ -78,14 +96,7 @@ for i1 = 1:nFiles
     timeArrayHrs     = datenum2hour(timeArray);
     csArray          = csArray(workIdx);
     illuminanceArray = illuminanceArray(workIdx);
-    activityArray    = activityArray(workIdx);
     
-    % Make Miller Plot
-    [millerTimeArray_hours,millerCsArray] = millerize(timeArray,csArray);
-    [~,millerActivityArray] = millerize(timeArray,activityArray);
-    
-    millerplot(Paths.plots,locationID,displayLocation,displaySession,...
-        millerTimeArray_hours,millerCsArray,millerActivityArray);
     
     % Round data to threshold
     csArray = choptothreshold(csArray,0.005);
@@ -94,120 +105,38 @@ for i1 = 1:nFiles
     % Identify sunny times
     sunnyDayLogical = issunny(timeArray,sunnyDayArray);
     
-    for i2 = 1:numel(hourArray)
-        currentHour = timeArrayHrs == hourArray(i2);
+    for iHour = 1:nHour
+        thisHour = hourArray(iHour);
+        thisHourIdx = timeArrayHrs == thisHour;
         % Overall averages
-        allLuxGeoMean(i2) = geomean(illuminanceArray(currentHour));
-        allLuxArithmeticMean(i2) = mean(illuminanceArray(currentHour));
-        allCs(i2)  = mean(csArray(currentHour));
+        Results.allLuxGeoMean{iHour+2,iFile+1} = geomean(illuminanceArray(thisHourIdx));
+        Results.allCsAriMean{iHour+2,iFile+1}  = mean(csArray(thisHourIdx));
         % Sunny averages
-        currentSunny = sunnyDayLogical & currentHour;
-        sunnyLuxGeoMean(i2) = geomean(illuminanceArray(currentSunny));
-        sunnyLuxArithmeticMean(i2) = mean(illuminanceArray(currentSunny));
-        sunnyCs(i2)  = mean(csArray(currentSunny));
+        currentSunny = sunnyDayLogical & thisHourIdx;
+        Results.sunnyLuxGeoMean{iHour+2,iFile+1} = geomean(illuminanceArray(currentSunny));
+        Results.sunnyCsAriMean{iHour+2,iFile+1}  = mean(csArray(currentSunny));
         % Cloudy averages
-        currentCloudy = ~sunnyDayLogical & currentHour;
-        cloudyLuxGeoMean(i2) = geomean(illuminanceArray(currentCloudy));
-        cloudyLuxArithmeticMean(i2) = mean(illuminanceArray(currentCloudy));
-        cloudyCs(i2)  = mean(csArray(currentCloudy));
+        currentCloudy = ~sunnyDayLogical & thisHourIdx;
+        Results.cloudyLuxGeoMean{iHour+2,iFile+1} = geomean(illuminanceArray(currentCloudy));
+        Results.cloudyCsAriMean{iHour+2,iFile+1}  = mean(csArray(currentCloudy));
     end
-       
-    dataMat = [hourArray,allLuxArithmeticMean,allLuxGeoMean,allCs,sunnyLuxArithmeticMean,sunnyLuxGeoMean,sunnyCs,cloudyLuxArithmeticMean,cloudyLuxGeoMean,cloudyCs];
-    dataCell = [labels;num2cell(dataMat)];
+        
     
-    % Save output to spreadsheet
-    sheet = locationID;
-    xlswrite(resultsPath,dataCell,sheet);
 end
 
-close all
-
+% Save Results to spreadsheet
+for iVar = 1:nVar
+    thisVar = varNames{iVar};
+    thisResult = Results.(thisVar);
+    
+    % Remove empty rows
+    emptyCellIdx = cellfun(@isempty,thisResult);
+    emptyRowIdx = emptyCellIdx(1,:);
+    thisResult(:,emptyRowIdx) = [];
+    
+    xlswrite(resultsPath,thisResult,thisVar);
+    
 end
-
-
-function [millerTimeArray_hours,millerDataArray] = millerize(timeArray,dataArray)
-
-relTimeArray_days = mod(timeArray-floor(timeArray(1)),1);
-
-relTimeArray_seconds = round(relTimeArray_days*24*60*60/30)*30; % precise to 30 seconds
-
-millerTimeArray_seconds = unique(relTimeArray_seconds);
-
-nPoints = numel(millerTimeArray_seconds);
-
-millerDataArray = zeros(nPoints,1);
-
-for i1 = 1:nPoints
-    idx = relTimeArray_seconds == millerTimeArray_seconds(i1);
-    millerDataArray(i1) = mean(dataArray(idx));
-end
-
-millerTimeArray_hours = millerTimeArray_seconds/(60*60);
-
-end
-
-function millerplot(plotDir,locationID,displayLocation,displaySession,millerTimeArray_hours,millerCsArray,millerActivityArray)
-
-clf
-
-% Create axes to plot on
-hAxes = axes;
-hold('on');
-
-set(hAxes,'XTick',0:2:24);
-set(hAxes,'TickDir','out');
-
-xlim(hAxes,[0 24]);
-
-yMax = 0.7;
-if max(millerActivityArray) > yMax
-    yMax = max(mAI);
-else
-    yTick = 0:0.1:0.7;
-    set(hAxes,'YTick',yTick);
-end
-ylim(hAxes,[0 yMax]);
-box('off');
-
-% Plot AI
-area1 = area(hAxes,millerTimeArray_hours,millerActivityArray,'LineStyle','none');
-set(area1,...
-    'FaceColor',[180, 211, 227]/256,'EdgeColor','none',...
-    'DisplayName','Activity Index (AI)');
-
-% Plot CS
-plot1 = plot(hAxes,millerTimeArray_hours,millerCsArray);
-set(plot1,...
-    'Color','k','LineWidth',2,...
-    'DisplayName','Circadian Stimulus (CS)');
-
-% Create x-axis label
-xlabel('Time (hours)');
-
-% Create title
-titleStr = {['GSA - ',displayLocation,' - ',displaySession];locationID};
-hTitle = title(titleStr);
-set(hTitle,'FontSize',16);
-
-% Plot a box
-z = [100,100];
-hLine1 = line([0 24],[yMax yMax],z,'Color','k');
-hLine2 = line([24 24],[0 yMax],z,'Color','k');
-hLine3 = line([0 24],[0 0],z,'Color','k');
-hLine4 = line([0 0],[0 yMax],z,'Color','k');
-
-set(hLine1,'Clipping','off');
-set(hLine2,'Clipping','off');
-set(hLine3,'Clipping','off');
-set(hLine4,'Clipping','off');
-
-% Create legend
-legend1 = legend([area1,plot1]);
-set(legend1,'Orientation','horizontal','Location','Best');
-
-fileName = ['millerPlot_',datestr(now,'yyyy-mm-dd_HHMM'),'_locationID',locationID];
-filePath = fullfile(plotDir,fileName);
-print(gcf,'-dpdf',filePath,'-painters');
 
 end
 
