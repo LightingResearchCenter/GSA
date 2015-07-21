@@ -17,8 +17,7 @@ Paths = initializepaths(plainLocation,plainSession);
 weatherLogPath = fullfile(Paths.logs,'weatherLog.xlsx');
 
 runtime = datestr(now,'yyyy-mm-dd_HHMM');
-desktop = 'C:\Users\jonesg5\Desktop\forClaudia';
-resultsPath = fullfile(desktop,['hourlyAverage_',runtime,'_GSA_',plainLocation,'_',plainSession,'.xlsx']);
+resultsPath = fullfile(Paths.results,['hourlyAverage_',runtime,'_GSA_',plainLocation,'_',plainSession,'.xlsx']);
 
 
 sunnyDayArray = importweatherlog(weatherLogPath);
@@ -89,6 +88,12 @@ for iFile = 1:nFile
         csArray          = csArray(keepIdx);
         illuminanceArray = illuminanceArray(keepIdx);
     end
+    
+    % Remove holidays
+    removeIdx = timeArray >= datenum(2015,7,3) & timeArray < datenum(2015,7,4);
+    timeArray        = timeArray(~removeIdx);
+    csArray          = csArray(~removeIdx);
+    illuminanceArray = illuminanceArray(~removeIdx);
     
     % Crop data to work times
     workIdx = createworkday(timeArray,workStart,workEnd);
