@@ -69,6 +69,13 @@ for i1 = 1:nFiles
         activityArray    = activityArray(keepIdx);
     end
     
+    % Remove holidays
+    removeIdx = timeArray >= datenum(2015,7,3) & timeArray < datenum(2015,7,4);
+    timeArray        = timeArray(~removeIdx);
+    csArray          = csArray(~removeIdx);
+    illuminanceArray = illuminanceArray(~removeIdx);
+    activityArray    = activityArray(~removeIdx);
+    
     dateRange{i1+1,1} = datestr(min(timeArray));
     dateRange{i1+1,2} = datestr(max(timeArray));
     
