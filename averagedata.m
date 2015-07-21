@@ -41,23 +41,16 @@ dateRange{1,1} = 'start date';
 dateRange{1,2} = 'end date';
 for i1 = 1:nFiles
     % Import data
-    Data = ProcessCDF(cdfPathArray{i1});
-    locationID      = Data.GlobalAttributes.subjectID{1};
-    deviceSN        = Data.GlobalAttributes.deviceSN{1};
-    logicalArray	= logical(Data.Variables.logicalArray);
-    
+    cdfData = daysimeter12.readcdf(cdfPathArray{i1});
+    [absTime,relTime,epoch,light,activity,masks,locationID,deviceSN] = daysimeter12.convertcdf(cdfData);
+        
     locationID = [locationID,' D',deviceSN(end-2:end)];
     
-    if exist('Data.Variables.complianceArray','var') ~= 0
-        complianceArray  = logical(Data.Variables.complianceArray);
-    else
-        complianceArray = true(size(logicalArray));
-    end
-    newLogicalArray  = logicalArray & complianceArray;
-    timeArray        = Data.Variables.time(newLogicalArray);
-    csArray          = Data.Variables.CS(newLogicalArray);
-    illuminanceArray = Data.Variables.illuminance(newLogicalArray);
-    activityArray    = Data.Variables.activity(newLogicalArray);
+    newLogicalArray  = masks.observation & masks.compliance;
+    timeArray        = absTime.localDateNum(newLogicalArray);
+    csArray          = light.cs(newLogicalArray);
+    illuminanceArray = light.illuminance(newLogicalArray);
+    activityArray    = activity(newLogicalArray);
     
     
     % Crop DC December 2014
@@ -192,7 +185,10 @@ set(plot1,...
 xlabel('Time (hours)');
 
 % Create title
-titleStr = {['GSA - ',displayLocation,' - ',displaySession];locationID};
+
+millerLocation = regexprep(locationID,'_','\\_');
+
+titleStr = {['GSA - ',displayLocation,' - ',displaySession];millerLocation};
 hTitle = title(titleStr);
 set(hTitle,'FontSize',16);
 
