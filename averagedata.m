@@ -63,7 +63,8 @@ for i1 = 1:nFiles
     end
     
     % Remove holidays
-    removeIdx = timeArray >= datenum(2015,7,3) & timeArray < datenum(2015,7,4);
+    removeIdx = isHolidayBasic(timeArray);
+%     removeIdx = timeArray >= datenum(2015,7,3) & timeArray < datenum(2015,7,4);
     timeArray        = timeArray(~removeIdx);
     csArray          = csArray(~removeIdx);
     illuminanceArray = illuminanceArray(~removeIdx);
