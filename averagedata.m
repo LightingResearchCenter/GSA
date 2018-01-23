@@ -11,14 +11,16 @@ initializedependencies;
 
 % Construct project paths
 Paths = initializepaths(plainLocation,plainSession);
-[cdfNameArray,cdfPathArray] = searchdir(Paths.editedData,'cdf');
-weatherLogPath = fullfile(Paths.logs,'weatherLog.xlsx');
+% [cdfNameArray,cdfPathArray] = searchdir(Paths.editedData,'cdf');
+[cdfNameArray,cdfPathArray] = searchdir(Paths.correctedData,'cdf');
+weatherLogXLSX = fullfile(Paths.logs,'weatherLog.xlsx');
+weatherLogMAT = fullfile(Paths.logs,'weatherLog.mat');
 
 runtime = datestr(now,'yyyy-mm-dd_HHMM');
 resultsPath = fullfile(Paths.results,['hourlyAverage_',runtime,'_GSA_',plainLocation,'_',plainSession,'.xlsx']);
 
 
-sunnyDayArray = importweatherlog(weatherLogPath);
+sunnyDayArray = importweatherlog(weatherLogXLSX);
 workStart = 8;
 workEnd   = 17;
 hourArray = (workStart+1:workEnd)';
